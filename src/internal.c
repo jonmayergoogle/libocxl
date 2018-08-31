@@ -174,7 +174,7 @@ void ocxl_default_afu_error_handler(ocxl_afu_h afu, ocxl_err error, const char *
 	const char *dev = ocxl_afu_get_device_path(afu);
 
 	pthread_mutex_lock(&stderr_mutex);
-	fprintf(stderr, "ERROR: %s\t%s: %s\n", dev, ocxl_err_to_string(error), message);
+	fprintf(stderr, "ERROR: %s\t%s: %s\n", dev ? dev : "No AFU", ocxl_err_to_string(error), message);
 	pthread_mutex_unlock(&stderr_mutex);
 }
 
@@ -182,8 +182,8 @@ void ocxl_default_afu_error_handler(ocxl_afu_h afu, ocxl_err error, const char *
  * Grow a buffer geometrically
  *
  * @param afu the AFU that owns the buffer
- * @param buffer [in/out] the buffer to grow
- * @param [in/out] the number of elements in the buffer
+ * @param buffer [in,out] the buffer to grow
+ * @param [in,out] count the number of elements in the buffer
  * @param size the size of a buffer element
  * @param initial_count the initial number of elements in the buffer
  */
@@ -197,6 +197,8 @@ ocxl_err grow_buffer(ocxl_afu *afu, void **buffer, uint16_t *count, size_t size,
 		       new_count, size, new_count * size, errno, strerror(errno));
 		return rc;
 	}
+
+	memset((char *)temp + *count * size, '\0', new_count - *count);
 
 	*buffer = temp;
 	*count = new_count;

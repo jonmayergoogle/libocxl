@@ -18,7 +18,7 @@ HAS_WGET = $(shell /bin/which wget > /dev/null 2>&1 && echo y || echo n)
 HAS_CURL = $(shell /bin/which curl > /dev/null 2>&1 && echo y || echo n)
 
 # Update this to test a single feature from the most recent header we require:
-CHECK_OCXL_HEADER_IS_UP_TO_DATE = $(shell /bin/echo -e \\\#include $(1)\\\nvoid test\(struct ocxl_ioctl_metadata test\)\; | \
+CHECK_OCXL_HEADER_IS_UP_TO_DATE = $(shell /bin/echo -e \\\#include $(1)\\\nvoid test\(struct ocxl_ioctl_features test\)\; | \
 	$(CC) $(CFLAGS) -Werror -x c -S -o /dev/null - > /dev/null 2>&1 && echo y || echo n)
 
 check_ocxl_header:
@@ -81,7 +81,7 @@ include Makefile.rules
 
 cppcheck:
 	cppcheck --enable=all -j 4 -q  src/*.c src/include/libocxl.h
-	
+
 cppcheck-xml:
 	cppcheck --enable=all -j 4 -q  src/*.c src/include/libocxl.h --xml-version=2 2>cppcheck.xml
 

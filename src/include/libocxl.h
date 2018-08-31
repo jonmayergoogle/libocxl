@@ -17,6 +17,9 @@
 /**
  * @file libocxl.h
  * @brief library functions to implement userspace drivers for OpenCAPI accelerators
+ *
+ * Define LIBOCXL_LIVE_DANGEROUSLY before including this header to suppress optional
+ * compiler warnings, such as warnings on unused return values.
  */
 
 #ifndef _LIBOCXL_H
@@ -68,7 +71,7 @@ typedef struct ocxl_identifier {
 /**
  * A handle for an AFU
  */
-typedef void *ocxl_afu_h;
+typedef struct ocxl_afu *ocxl_afu_h;
 
 #define OCXL_INVALID_AFU NULL /**< An invalid AFU handle */
 
@@ -80,7 +83,7 @@ typedef uint16_t ocxl_irq_h;
 /**
  * A handle for an MMIO region on an AFU
  */
-typedef void *ocxl_mmio_h;
+typedef struct ocxl_mmio_area *ocxl_mmio_h;
 
 
 /**
@@ -130,6 +133,17 @@ typedef struct {
 	uint64_t count; /**< The number of times this address has triggered the fault */
 } ocxl_event_translation_fault;
 
+
+#ifndef _DOXYGEN_
+#if defined(LIBOCXL_LIVE_DANGEROUSLY)
+#define LIBOCXL_WARN_UNUSED
+#elif defined(__clang__) && __clang_major__ < 3 || __clang_major__ == 3 && __clang_minor__ <= 8
+#define LIBOCXL_WARN_UNUSED
+#else
+#define LIBOCXL_WARN_UNUSED __attribute__ ((warn_unused_result))
+#endif
+#endif /* _DOXYGEN_ */
+
 /**
  * An OCXL event
  *
@@ -151,41 +165,83 @@ typedef struct ocxl_event {
 /* setup.c */
 void ocxl_enable_messages(uint64_t sources);
 void ocxl_set_error_message_handler(void (*handler)(ocxl_err error, const char *message));
-const char *ocxl_err_to_string(ocxl_err err);
-const char *ocxl_info();
+const char *ocxl_err_to_string(ocxl_err err) LIBOCXL_WARN_UNUSED;
+const char *ocxl_info() LIBOCXL_WARN_UNUSED;
 
 /* afu.c */
 /* AFU getters */
-const ocxl_identifier *ocxl_afu_get_identifier(ocxl_afu_h afu);
-const char *ocxl_afu_get_device_path(ocxl_afu_h afu);
-const char *ocxl_afu_get_sysfs_path(ocxl_afu_h afu);
+const ocxl_identifier *ocxl_afu_get_identifier(ocxl_afu_h afu) LIBOCXL_WARN_UNUSED;
+const char *ocxl_afu_get_device_path(ocxl_afu_h afu) LIBOCXL_WARN_UNUSED;
+const char *ocxl_afu_get_sysfs_path(ocxl_afu_h afu) LIBOCXL_WARN_UNUSED;
 void ocxl_afu_get_version(ocxl_afu_h afu, uint8_t *major, uint8_t *minor);
-uint32_t ocxl_afu_get_pasid(ocxl_afu_h afu);
+uint32_t ocxl_afu_get_pasid(ocxl_afu_h afu) LIBOCXL_WARN_UNUSED;
 
 /* AFU operations */
-ocxl_err ocxl_afu_open_specific(const char *name, const char *physical_function, int16_t afu_index, ocxl_afu_h *afu);
-ocxl_err ocxl_afu_open_from_dev(const char *path, ocxl_afu_h *afu);
-ocxl_err ocxl_afu_open(const char *name, ocxl_afu_h *afu);
+ocxl_err ocxl_afu_open_specific(const char *name, const char *physical_function, int16_t afu_index,
+                                ocxl_afu_h *afu) LIBOCXL_WARN_UNUSED;
+ocxl_err ocxl_afu_open_from_dev(const char *path, ocxl_afu_h *afu) LIBOCXL_WARN_UNUSED;
+ocxl_err ocxl_afu_open(const char *name, ocxl_afu_h *afu) LIBOCXL_WARN_UNUSED;
 void ocxl_afu_enable_messages(ocxl_afu_h afu, uint64_t sources);
 void ocxl_afu_set_error_message_handler(ocxl_afu_h afu, void (*handler)(ocxl_afu_h afu, ocxl_err error,
                                         const char *message));
 ocxl_err ocxl_afu_close(ocxl_afu_h afu);
-ocxl_err ocxl_afu_attach(ocxl_afu_h afu, uint64_t flags);
+ocxl_err ocxl_afu_attach(ocxl_afu_h afu, uint64_t flags) LIBOCXL_WARN_UNUSED;
 
 /* irq.c */
 /* AFU IRQ functions */
-ocxl_err ocxl_irq_alloc(ocxl_afu_h afu, void *info, ocxl_irq_h *irq_handle);
-uint64_t ocxl_irq_get_handle(ocxl_afu_h afu, ocxl_irq_h irq);
-int ocxl_afu_get_event_fd(ocxl_afu_h afu);
-int ocxl_irq_get_fd(ocxl_afu_h afu, ocxl_irq_h irq);
+ocxl_err ocxl_irq_alloc(ocxl_afu_h afu, void *info, ocxl_irq_h *irq_handle) LIBOCXL_WARN_UNUSED;
+uint64_t ocxl_irq_get_handle(ocxl_afu_h afu, ocxl_irq_h irq) LIBOCXL_WARN_UNUSED;
+int ocxl_afu_get_event_fd(ocxl_afu_h afu) LIBOCXL_WARN_UNUSED;
+int ocxl_irq_get_fd(ocxl_afu_h afu, ocxl_irq_h irq) LIBOCXL_WARN_UNUSED;
 int ocxl_afu_event_check_versioned(ocxl_afu_h afu, int timeout, ocxl_event *events, uint16_t event_count,
-                                   uint16_t event_api_version);
-
+                                   uint16_t event_api_version) LIBOCXL_WARN_UNUSED;
+#ifdef _ARCH_PPC64
+ocxl_err ocxl_afu_get_p9_thread_id(ocxl_afu_h afu, uint16_t *thread_id);
+#endif
 
 /**
  * @addtogroup ocxl_irq
  * @{
  */
+
+#if defined(_ARCH_PPC64) && !defined(__STRICT_ANSI__)
+/**
+ * A wrapper around the the POWER9 wait instruction
+ *
+ * The wake_host_thread/wait mechanism provide a low-latency way for an AFU to signal to the
+ * calling thread that a condition has been met (eg. work has been completed).
+ *
+ * This function will cause the thread to wait until woken by the AFU via wake_host_thread.
+ * As the thread may be woken for reasons other than wake_host_thread, a condition variable
+ * must be set by the AFU before issuing the wake.
+ *
+ * In order to successfully wake a waiting thread, the AFU must know the address of
+ * the condition variable, and the thread ID of the application (via ocxl_afu_get_p9_thread_id()).
+ *
+ * A typical usage will be:
+ * @code
+ *   while (!condition_variable_is_set()) {
+ *   	ocxl_wait();
+ *   } // Pause execution until the condition variable is set
+ *
+ *   clear_condition_variable();
+ *
+ *   // Execution continues here
+ * @endcode
+ *
+ * @see ocxl_afu_get_p9_thread_id()
+ */
+#ifndef _DOXYGEN_
+static
+#endif
+inline void ocxl_wait()
+{
+	/* This would be just 'asm volatile ("wait")', but clang produces invalid machine code */
+	asm volatile (".long 0x7c00003c");
+}
+#elif defined(_ARCH_PPC64) && !defined(LIBOCXL_SUPPRESS_INACCESSIBLE_WARNINGS)
+#warning LibOCXL ocxl_wait() will not be available while ANSI C mode is enabled
+#endif
 
 /**
  * Check for pending IRQs and other events.
@@ -206,6 +262,7 @@ int ocxl_afu_event_check_versioned(ocxl_afu_h afu, int timeout, ocxl_event *even
  * @return the number of events triggered, if this is the same as event_count, you should call ocxl_afu_event_check again
  * @retval -1 if an error occurred
  */
+LIBOCXL_WARN_UNUSED
 #ifndef _DOXYGEN_
 static
 #endif
@@ -226,11 +283,11 @@ ocxl_err ocxl_afu_set_ppc64_amr(ocxl_afu_h afu, uint64_t amr);
 
 /* mmio.c */
 ocxl_err ocxl_mmio_map_advanced(ocxl_afu_h afu, ocxl_mmio_type type, size_t size, int prot, uint64_t flags,
-                                off_t offset, ocxl_mmio_h *region);
-ocxl_err ocxl_mmio_map(ocxl_afu_h afu, ocxl_mmio_type type, ocxl_mmio_h *region);
+                                off_t offset, ocxl_mmio_h *region) LIBOCXL_WARN_UNUSED;
+ocxl_err ocxl_mmio_map(ocxl_afu_h afu, ocxl_mmio_type type, ocxl_mmio_h *region) LIBOCXL_WARN_UNUSED;
 void ocxl_mmio_unmap(ocxl_mmio_h region);
-int ocxl_mmio_get_fd(ocxl_afu_h afu, ocxl_mmio_type type);
-size_t ocxl_mmio_size(ocxl_afu_h afu, ocxl_mmio_type type);
+int ocxl_mmio_get_fd(ocxl_afu_h afu, ocxl_mmio_type type) LIBOCXL_WARN_UNUSED;
+size_t ocxl_mmio_size(ocxl_afu_h afu, ocxl_mmio_type type) LIBOCXL_WARN_UNUSED;
 ocxl_err ocxl_mmio_get_info(ocxl_mmio_h region, void **address, size_t *size);
 ocxl_err ocxl_mmio_read32(ocxl_mmio_h mmio, off_t offset, ocxl_endian endian, uint32_t *out);
 ocxl_err ocxl_mmio_read64(ocxl_mmio_h mmio, off_t offset, ocxl_endian endian, uint64_t *out);

@@ -70,10 +70,21 @@ A typical use of libocxl will follow this pattern:
    ocxl\_mmio\_read64().
 10. **Termination:** ocxl\_afu\_close() will free all resources associated with an AFU handle.
 
+# Documentation
+
+API documentation is generated using [Doxygen](http://www.stack.nl/~dimitri/doxygen/) in both HTML and man page format.
+
+To build the documentation, run `make docs`.
+
+An online version of the libocxl HTML documentation can be found at [opencapi.github.io](https://opencapi.github.io).
+
 # Development
 The following environment variables may be set (to 1 or "YES") to assist with development:
+
 **LIBOCXL_INFO** Print information about the LibOCXL build to stderr. This should be included in any bug reports.
+
 **LIBOCXL_TRACE_ALL** Force AFU interaction trace messages to be emitted for all AFUs unless explicitly disabled.
+
 **LIBOCXL_VERBOSE_ERRORS_ALL** Force verbose errors to be emitted for any failed LibOCXL calls, unless explicitly disabled.
 
 Patches may be submitted via Github pull requests. Please prepare your patches
